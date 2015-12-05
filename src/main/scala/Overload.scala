@@ -44,12 +44,22 @@ object Overload {
 
   object overloaded extends Overload {
     implicit val intIntCase = Case((a: Int, b: Int) => a + b)
+
     implicit val stringCase = Case((b: String, i: Int) => s"$b: $i")
+
     implicit val optStringCase = Case((t: Option[String]) => t.get)
+
     implicit val optIntCase = Case((t: Option[Int]) => t.get)
-    implicit def futureT[T] = Case((t: Future[T], default: T) => t.map(Right(_)).recover { case _ => default })
+
+    implicit def futureT[T] = Case((t: Future[T]) => t.map(Right(_)))
+
+    implicit def futureOptT[T, U](implicit ev: U <:< Option[T]) =
+      Case((t: Future[U]) => t.map(_.map(Right(_)).getOrElse(Left(new Exception("fail")))))
+
+    implicit def futureTDefault[T] = Case((t: Future[T], default: T) => t.map(Right(_)).recover { case _ => default })
+
     // requires implicit evidence in order to allow Some and None to be passed for Option
-    implicit def futureOptT[T, U](implicit ev: U <:< Option[T]) = {
+    implicit def futureOptTDefault[T, U](implicit ev: U <:< Option[T]) = {
       Case((t: Future[U], default: T) => t.map(_.getOrElse(default)))
     }
   }
