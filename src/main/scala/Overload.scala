@@ -42,7 +42,11 @@ abstract class Overload extends ProductArgs {
 
 object Overload {
 
-  object overloaded extends Overload {
+  trait LowPriorityOverloads extends Overload {
+    implicit def futureT[T] = Case((t: Future[T]) => t.map(Right(_)))
+  }
+
+  object overloaded extends Overload with LowPriorityOverloads {
     implicit val intIntCase = Case((a: Int, b: Int) => a + b)
 
     implicit val stringCase = Case((b: String, i: Int) => s"$b: $i")
@@ -50,8 +54,6 @@ object Overload {
     implicit val optStringCase = Case((t: Option[String]) => t.get)
 
     implicit val optIntCase = Case((t: Option[Int]) => t.get)
-
-    implicit def futureT[T] = Case((t: Future[T]) => t.map(Right(_)))
 
     implicit def futureOptT[T, U](implicit ev: U <:< Option[T]) =
       Case((t: Future[U]) => t.map(_.map(Right(_)).getOrElse(Left(new Exception("fail")))))
@@ -70,9 +72,13 @@ object Overload {
     println(overloaded(1, 2: Int): Int)
     println(overloaded("a", 2: Int): String)
     println(overloaded("result": String, 2: Int): String)
-    println(Await.result(overloaded(Future.successful(1), 10), 1.second))
+    println(Await.result(overloaded(Future(1), 10), 1.second))
     println(Await.result(overloaded(Future(Some(1)), 10), 1.second))
     println(Await.result(overloaded(Future(None), 10), 1.second))
+
+    println(Await.result(overloaded(Future(Some(1))), 1.second))
+    println(Await.result(overloaded(Future(1)), 1.second))
+
   }
 }
 
