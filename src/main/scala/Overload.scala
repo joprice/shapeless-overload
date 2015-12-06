@@ -71,6 +71,8 @@ object Overload {
     println(overloaded("a", 2: Int): String)
     println(overloaded("result": String, 2: Int): String)
     println(Await.result(overloaded(Future.successful(1), 10), 1.second))
+    println(Await.result(overloaded(Future.successful(1) ), 1.second))
+    println(Await.result(overloaded(Future(Some(1))), 1.second))
     println(Await.result(overloaded(Future(Some(1)), 10), 1.second))
     println(Await.result(overloaded(Future(None), 10), 1.second))
   }
